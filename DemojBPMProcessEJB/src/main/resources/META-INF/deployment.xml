@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<jbossesb-deployment>
+<!-- HornetQ configuration. -->
+<!-- 
+  <jmsQueue>purchaseOrderRegistrationService_input_esb</jmsQueue>
+-->
+  <depends>org.hornetq:module=JMS,name="StartProcessInstanceQueue",type=Queue</depends>
+  <!-- 
+  <depends>jboss.jca:service=DataSourceBinding,name=PosDS</depends>
+   -->
+</jbossesb-deployment>

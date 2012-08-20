@@ -6,3 +6,11 @@ DemojBPMCore/.classpath
 DemojBPMCore/.project
 
 DemojBPMCore/.settings/
+
+DemojBPMProcessEJB/.classpath
+
+DemojBPMProcessEJB/.project
+
+DemojBPMProcessEJB/.settings/
+
+DemojBPMProcessEJB/build/

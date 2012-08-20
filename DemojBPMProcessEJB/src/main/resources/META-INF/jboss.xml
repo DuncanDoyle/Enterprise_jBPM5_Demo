@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss>
+	<enterprise-beans>
+		<message-driven>
+			<ejb-name>StartProcessInstance</ejb-name>
+			<!-- <destination-jndi-name>${jms.queue.getdocument}</destination-jndi-name> 
+				<activation-config> <activation-config-property> <activation-config-property-name>providerAdapterJNDI</activation-config-property-name> 
+				<activation-config-property-value>${jms.provideradapter.jndi}</activation-config-property-value> 
+				</activation-config-property> <activation-config-property> <activation-config-property-name>user</activation-config-property-name> 
+				<activation-config-property-value>${jms.queue.user}</activation-config-property-value> 
+				</activation-config-property> <activation-config-property> <activation-config-property-name>password</activation-config-property-name> 
+				<activation-config-property-value>${jms.queue.password}</activation-config-property-value> 
+				</activation-config-property> <activation-config-property> <activation-config-property-name>dLQJNDIName</activation-config-property-name> 
+				<activation-config-property-value>${jms.queue.exception}</activation-config-property-value> 
+				</activation-config-property> <activation-config-property> <activation-config-property-name>DLQUser</activation-config-property-name> 
+				<activation-config-property-value>${jms.exception.user}</activation-config-property-value> 
+				</activation-config-property> <activation-config-property> <activation-config-property-name>DLQPassword</activation-config-property-name> 
+				<activation-config-property-value>${jms.exception.password}</activation-config-property-value> 
+				</activation-config-property> </activation-config> -->
+		</message-driven>
+	</enterprise-beans>
+</jboss>
