@@ -1,0 +1,48 @@
+On every write(), the JMSTaskClientConnect seems to create a Thread. So, basically, every send of a JMS Message creates a thread to handle the response.
+This pattern is completely retarded when working with long-running Async processes. It does seem to be able to deal with a clustered environment, as it uses
+selectors. This basically means that, when using clustered queues, the response will end up at the node which has the correct selector registered.
+However, it does not deal with load-balancing, the response always needs to be processed by the node that sent out the original request to the HumanTask Service.
+
+Another 'design flaw' is that the session used by the Response Handlers (which are actually used on the Response thread) re-use the original session 
+set when the CommandBasedWSHumanTaskHandler was created. So, it is basically expected that the server will not restart. Even if it supports restarts,
+i.e. by, on server restart, initializing the SKS, connecting the WorkItemHandler, etc. it definitely does not support the sks-per-process-instance' architecture.
+
+Basically, this thing needs to be rewritten ..... 
+
+JMSTaskClient creates a ReponseThread on which a Responser is excecuted.
+
+This responder listens to the response queue.
+When it receives a message, it calls 'handleMessage', which in its turn calls JMSTaskClientHandler.messageReceived.
+This one in its turn calls TaskClientHandler.messageReceived.
+
+The TaskClientHandler determines what kind of message we're dealing with, searches for the corresponding ResponseHandler,
+removes the handler from the map and call's 'execute' on the correct handler.
+
+This thing does not send any JMS messages anymore at all (which makes sense). So why does the JMSTaskClientHandler, in its 'messageReceived' method,
+create JMS MessageProducers on the JMS session for the ResponseQueue destination?????
+Furthermore, it seems that these producers are never closed, there is no form of session, producer and connection LCM.
+Seems like some funky hacking to me.
+
+This seems to imply that we're creating ResponseHandlers per WorkItemHandler.execute method. Why is this necessary? Are these things stateful?
+Why can't we just define a stateless ResponseHandler per event and deal with the object's state in the call stack? 
+
+By the way, that ResponseHandler thread is not an optimal receiving thread. It utilizes an XAResource (hopefully) managed by the JCA outflow,
+which is meant for sending messages, not receiving them. Basically, such an implementation will keep the session and connection in use and 
+will never return it to the JCA managed pool. I wonder what will happen when, on JBoss EAP 5 + HornetQ, the max-pool-size is reached ..... 
+Is that a single 'Connection' pool per connection factory? Or does it also pool sessions .... (i.e. multiple sessions per connection architecture).
+ 
+Receiving threads are blocking threads, which is a performance hog.
+
+NEW ARCHITECTURE
+We need to capture a number of things in the HumanTask request. First of all, we need to capture the session-id, process-instance-id and workitem-id.
+As with our long-running external processes architecture, we can settle with the workitem-id. We internally keep track of the session <-> process instance 
+relationship. jBPM itself keeps track of the workitem instance <-> process instance relationship. So, if a response from the HumanTask Server returns, we can
+determine the correct session to be loaded, retrieve the WorkItemManager and complete the correct workitem. Basically, this is the same thing we did in our
+'long-running-process' architecture.
+ 
+CRAP!!!
+I thought we would be able to take the same approach as the CommandBasedWSThroughJMSHumanTaskHandler approach. But that think is a complete hack as well.
+Check this:
+He's is using reflection to set the TaskClient (the actual client that determines the connection to the messaging system etc.), because the TaskClient field is 
+private and has no public or protected getters and setters ..... Like .... serious. You gotta be kidding me. Is this the level of programming we do?
+This is just plain hacking around. I must admire the guys guts to opensource this and expose his stupidity retardness to the masses.

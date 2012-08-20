@@ -14,3 +14,15 @@ DemojBPMProcessEJB/.project
 DemojBPMProcessEJB/.settings/
 
 DemojBPMProcessEJB/build/
+
+DemojBPMProcessEAR/.project
+
+DemojBPMProcessEAR/.settings/
+
+DemojBPMWorkItemHandlers/.classpath
+
+DemojBPMWorkItemHandlers/.project
+
+DemojBPMWorkItemHandlers/.settings/
+
+DemojBPMWorkItemHandlers/bin/
