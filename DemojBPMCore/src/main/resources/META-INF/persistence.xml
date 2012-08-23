@@ -25,7 +25,7 @@
     <class>org.jbpm.process.audit.ProcessInstanceLog</class>
     <class>org.jbpm.process.audit.NodeInstanceLog</class>
     <class>org.jbpm.process.audit.VariableInstanceLog</class>
-    <class>com.redhat.ddoyle.jbpm5.entity.SessionProcessXref</class>
+    <class>org.jboss.ddoyle.jbpm5.entity.SessionProcessXref</class>
     <properties> 
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
          <property name="hibernate.hbm2ddl.auto" value="update"/>
