@@ -19,7 +19,6 @@ import org.drools.runtime.process.ProcessInstance;
 import org.jboss.ddoyle.jbpm5.entity.SessionProcessXref;
 import org.jbpm.ee.CMTDisposeCommand;
 
-
 public class SimpleProcessService implements ProcessService {
 
 	public static final String PROCESS_INSTANCE_UUID_VARIABLE_NAME = "process_instance_uuid";
@@ -135,7 +134,7 @@ public class SimpleProcessService implements ProcessService {
 
 		// Create the EntityManager and have it join the current transaction.
 		/*
-		 * TODO: Shouldn't we just have the container inject a EnntityManager for us? We're currently just a simple POJO, so we can't inject
+		 * TODO: Shouldn't we just have the container inject a EntityManager for us? We're currently just a simple POJO, so we can't inject
 		 * stuff with default JEE5. Once we run on EAP6, we can use CDI to inject our EntityManager (or EntityManagerFactory???). Thinking
 		 * of it, we could probably do a JNDI lookup of the EntityManager here and thus use a container manager EntityManager.
 		 */
@@ -143,19 +142,24 @@ public class SimpleProcessService implements ProcessService {
 		 * TODO: Do we actually need to create a new EntityManager on every call?
 		 */
 		EntityManager manager = jbpmCoreEMF.createEntityManager();
-		// Don't need to call 'joinTransaction()' as the EntityManager is created inside the transaction and thus will be automatically
-		// registered with the running transaction. (at least, according to the spec).
+		try {
+			// Don't need to call 'joinTransaction()' as the EntityManager is created inside the transaction and thus will be automatically
+			// registered with the running transaction. (at least, according to the spec).
 
-		SessionProcessXref sksProcessInstanceXRef = new SessionProcessXref(processInstanceUUID.toString());
-		sksProcessInstanceXRef.setProcessId(processId);
-		sksProcessInstanceXRef.setProcessInstanceId(pInstance.getId());
-		sksProcessInstanceXRef.setSessionId(ksessionId);
+			SessionProcessXref sksProcessInstanceXRef = new SessionProcessXref(processInstanceUUID.toString());
+			sksProcessInstanceXRef.setProcessId(processId);
+			sksProcessInstanceXRef.setProcessInstanceId(pInstance.getId());
+			sksProcessInstanceXRef.setSessionId(ksessionId);
 
-		manager.persist(sksProcessInstanceXRef);
+			manager.persist(sksProcessInstanceXRef);
+		} finally {
+			// And close the EntityManager.
+			manager.close();
+		}
 
-		//dispose the KSession using the new CMTDisposeCommand.
+		// dispose the KSession using the new CMTDisposeCommand.
 		ksession.execute(new CMTDisposeCommand());
-		
+
 		sBuilder.append(" : pInstanceId = " + pInstance.getId() + " : now completed");
 		LOGGER.info(sBuilder.toString());
 		return returnMap;
@@ -163,7 +167,7 @@ public class SimpleProcessService implements ProcessService {
 
 	@Override
 	public int getKSessionIdForProcess(long processInstanceID) {
-		//TODO Implement this method.s
+		// TODO Implement this method.s
 		return 0;
 	}
 
