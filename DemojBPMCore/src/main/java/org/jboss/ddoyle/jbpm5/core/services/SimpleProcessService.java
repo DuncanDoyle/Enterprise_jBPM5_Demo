@@ -38,6 +38,8 @@ public class SimpleProcessService implements ProcessService {
 
 	private EntityManagerFactory jbpmCoreEMF;
 
+	private EntityManager containerManagedjBPM5EntityManager;
+
 	private SimpleProcessService() {
 		// Load the InitialContext and UserTransaction.
 		try {
@@ -65,6 +67,17 @@ public class SimpleProcessService implements ProcessService {
 			jbpmCoreEMF = (EntityManagerFactory) ic.lookup("java:/jBPM5EntityManagerFactory");
 		} catch (Exception e) {
 			throw new IllegalStateException("JNDI lookup of entity manager factory failed.");
+		}
+
+		/*
+		 * TODO: We can probably use the container managed entity manager. This class already requires a running JTA transaction, so the
+		 * TranscationScopedEntityManager (the EntityManager implementation provided by the container) should work.
+		 */
+
+		try {
+			containerManagedjBPM5EntityManager = (EntityManager) ic.lookup("java:/jBPM5EntityManager");
+		} catch (Exception e) {
+			throw new IllegalStateException("JNDI lookup of entity manager failed.");
 		}
 
 	}
@@ -125,6 +138,7 @@ public class SimpleProcessService implements ProcessService {
 			 * UUID, this code can be removed.
 			 */
 			pInstance = ksession.startProcess(processId);
+			pInstance = ksession.startProcessInstance(1);
 		}
 
 		Map<String, Object> returnMap = new HashMap<String, Object>();
@@ -140,7 +154,32 @@ public class SimpleProcessService implements ProcessService {
 		 */
 		/*
 		 * TODO: Do we actually need to create a new EntityManager on every call?
+		 * 
+		 * If we grab an EntityManager inside a running JTA transaction, the JPA spec seems to dictate (not 100% sure about this), that the
+		 * EntityManager is automatically registered with that transaction.
 		 */
+		persistSessionProcessXrefWithApplicationManagedEntityManager(processInstanceUUID.toString(), processId, pInstance.getId(), ksessionId);
+		persistSessionProcessXrefWithContainerManagedEntityManager(processInstanceUUID.toString(), processId, pInstance.getId(), ksessionId);
+		
+		// dispose the KSession using the new CMTDisposeCommand.
+		ksession.execute(new CMTDisposeCommand());
+
+		sBuilder.append(" : pInstanceId = " + pInstance.getId() + " : now completed");
+		LOGGER.info(sBuilder.toString());
+		return returnMap;
+	}
+
+	private void persistSessionProcessXrefWithContainerManagedEntityManager(String processInstanceUUID, String processId,
+			long processInstanceId, int ksessionId) {
+		SessionProcessXref sksProcessInstanceXRef = new SessionProcessXref(processInstanceUUID.toString());
+		sksProcessInstanceXRef.setProcessId(processId);
+		sksProcessInstanceXRef.setProcessInstanceId(processInstanceId);
+		sksProcessInstanceXRef.setSessionId(ksessionId);
+		containerManagedjBPM5EntityManager.persist(sksProcessInstanceXRef);
+	}
+
+	private void persistSessionProcessXrefWithApplicationManagedEntityManager(String processInstanceUUID, String processId,
+			long processInstanceId, int ksessionId) {
 		EntityManager manager = jbpmCoreEMF.createEntityManager();
 		try {
 			// Don't need to call 'joinTransaction()' as the EntityManager is created inside the transaction and thus will be automatically
@@ -148,21 +187,13 @@ public class SimpleProcessService implements ProcessService {
 
 			SessionProcessXref sksProcessInstanceXRef = new SessionProcessXref(processInstanceUUID.toString());
 			sksProcessInstanceXRef.setProcessId(processId);
-			sksProcessInstanceXRef.setProcessInstanceId(pInstance.getId());
+			sksProcessInstanceXRef.setProcessInstanceId(processInstanceId);
 			sksProcessInstanceXRef.setSessionId(ksessionId);
-
 			manager.persist(sksProcessInstanceXRef);
 		} finally {
 			// And close the EntityManager.
 			manager.close();
 		}
-
-		// dispose the KSession using the new CMTDisposeCommand.
-		ksession.execute(new CMTDisposeCommand());
-
-		sBuilder.append(" : pInstanceId = " + pInstance.getId() + " : now completed");
-		LOGGER.info(sBuilder.toString());
-		return returnMap;
 	}
 
 	@Override
