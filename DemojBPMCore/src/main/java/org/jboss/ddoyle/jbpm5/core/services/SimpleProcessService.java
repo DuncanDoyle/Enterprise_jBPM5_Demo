@@ -112,6 +112,8 @@ public class SimpleProcessService implements ProcessService {
 		final StatefulKnowledgeSession ksession = SimpleKSessionService.getInstance().getKSession();
 		int ksessionId = ksession.getId();
 
+		
+		
 		StringBuilder sBuilder = new StringBuilder();
 		sBuilder.append("startProcessAndReturnId()\tsessionId :  " + ksessionId + " : process = " + processId);
 
@@ -159,7 +161,7 @@ public class SimpleProcessService implements ProcessService {
 		 * EntityManager is automatically registered with that transaction.
 		 */
 		persistSessionProcessXrefWithApplicationManagedEntityManager(processInstanceUUID.toString(), processId, pInstance.getId(), ksessionId);
-		persistSessionProcessXrefWithContainerManagedEntityManager(processInstanceUUID.toString(), processId, pInstance.getId(), ksessionId);
+		//persistSessionProcessXrefWithContainerManagedEntityManager(processInstanceUUID.toString(), processId, pInstance.getId(), ksessionId);
 		
 		// dispose the KSession using the new CMTDisposeCommand.
 		ksession.execute(new CMTDisposeCommand());
@@ -206,6 +208,19 @@ public class SimpleProcessService implements ProcessService {
 	public StatefulKnowledgeSession getKSessionForProcess(long processInstanceID) {
 		int ksessionId = getKSessionIdForProcess(processInstanceID);
 		return SimpleKSessionService.getInstance().loadKSession(ksessionId);
+	}
+	
+	public void closeEntityManagerFactory() {
+		jbpmCoreEMF.close();
+	}
+	
+	public void closeEntityManager() {
+		containerManagedjBPM5EntityManager.close();
+	}
+	
+	
+	public void destroy() {
+		closeEntityManagerFactory();
 	}
 
 }
