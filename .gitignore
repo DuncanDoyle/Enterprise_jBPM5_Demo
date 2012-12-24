@@ -27,6 +27,8 @@ DemojBPMWorkItemHandlers/.project
 
 DemojBPMWorkItemHandlers/.settings/
 
+DemojBPMWorkItemHandlers/target/
+
 DemojBPMWorkItemHandlers/bin/
 
 DemoStartProcessInstanceWeb/.classpath
