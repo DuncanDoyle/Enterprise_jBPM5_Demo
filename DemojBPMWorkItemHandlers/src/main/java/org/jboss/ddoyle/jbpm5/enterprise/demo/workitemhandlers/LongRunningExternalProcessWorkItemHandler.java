@@ -10,15 +10,13 @@ import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
-import org.apache.log4j.Logger;
 import org.drools.runtime.process.WorkItem;
 import org.drools.runtime.process.WorkItemHandler;
 import org.drools.runtime.process.WorkItemManager;
-import org.jboss.ddoyle.jbpm5.entity.WorkItemXref;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -37,7 +35,7 @@ import org.jboss.ddoyle.jbpm5.entity.WorkItemXref;
  */
 public class LongRunningExternalProcessWorkItemHandler implements WorkItemHandler {
 
-	private static final Logger LOGGER = Logger.getLogger(LongRunningExternalProcessWorkItemHandler.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(LongRunningExternalProcessWorkItemHandler.class);
 
 	private static final String DB_CONNECTION_JNDI_NAME = "java:ExternalSystemDS";
 
